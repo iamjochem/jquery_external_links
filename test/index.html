@@ -22,8 +22,19 @@
     <h2 id="qunit-userAgent"></h2>
     <ol id="qunit-tests"></ol>
 
+    <!-- for the purposes of testing *NO* links should have a target set to "_blank" -->
     <div id="qunit-fixture">
-      <!-- TODO! -->
+      <div>foo bar qux</div>
+      <a class="odd"  href="https://google.com"  rel="external"               >1</a>
+      <a class="even" href="http://amazon.com"   rel="external"               >2</a>
+      <a class="odd"  href="//apple.com"         rel="external"               >3</a>
+      <a class="even" href="//twitter.com"       rel="external"               >4</a>
+      <a class="odd"  href="https://github.com"                               >5</a>
+      <a class="even" href="http://yahoo.com"                                 >6</a>
+      <a class="odd"  href="//facebook.com"                                   >7</a>
+      <a class="even" href="//bbc.co.uk"                        target="bbc"  >8</a>
+      <a class="odd"  href="//news.ycombinator.com"             target="ynews">9</a>
+      <a class="even" href="#top"                                             >10</a>
     </div>
   </body>
 </html>
