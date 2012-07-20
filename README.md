@@ -40,14 +40,14 @@ do something like the following without affecting the relevant 'div' DOM element
 When calling the `externalLinks` method you can pass in an object literal as the first argument,
 the following property options are supported (all options are optional!):
 
-* **`favicon       `**- (boolean), defines whether favicons are displayed, *defaults to* `TRUE`
-* **`favicon_url   `**- (string), the base URL used when generating the URL for the favicon sprite image, *defaults to* 'http://favicon.yandex.net/favicon'
-* **`url_seperator `**- (string), the string used to seperate domain names in the generated URL, *defaults to* `'/'`
-* **`link_class    `**- (string), css class to add to the 'a' DOM element, *defaults to* `'external-link'`
-* **`link_selector `**- (string), a jQuery selector used to determine whether a element in the collection will be affected by this plugin, *defaults to* `'a'`
-* **`span_class    `**- (string), css class to add to the favicon 'span' DOM element injected into the 'a' DOM element, *defaults to* `'ext-favicon'`
-* **`span_position `**- (string), determines whether the favicon 'span' DOM element is, value can be either 'left' or 'right', *defaults to* `'right'`
-* **`special_hosts `**- (array), an array of arrays, each inner array must contains 2 elements, the first is a regexp, the second a hostname, links with hostnames that match a given regexp will have their favicons set to that of the hostname corresponding regexp, *the default value of* `[[/github\.com$/, 'github.com']]` is merged with any user supplied values
+* **favicon<pre>      </pre> **- (boolean), defines whether favicons are displayed, *defaults to* `TRUE`
+* **favicon_url   **- (string), the base URL used when generating the URL for the favicon sprite image, *defaults to* 'http://favicon.yandex.net/favicon'
+* **url_seperator **- (string), the string used to seperate domain names in the generated URL, *defaults to* `'/'`
+* **link_class    **- (string), css class to add to the 'a' DOM element, *defaults to* `'external-link'`
+* **link_selector **- (string), a jQuery selector used to determine whether a element in the collection will be affected by this plugin, *defaults to* `'a'`
+* **span_class    **- (string), css class to add to the favicon 'span' DOM element injected into the 'a' DOM element, *defaults to* `'ext-favicon'`
+* **span_position **- (string), determines whether the favicon 'span' DOM element is, value can be either 'left' or 'right', *defaults to* `'right'`
+* **special_hosts **- (array), an array of arrays, each inner array must contains 2 elements, the first is a regexp, the second a hostname, links with hostnames that match a given regexp will have their favicons set to that of the hostname corresponding regexp, *the default value of* `[[/github\.com$/, 'github.com']]` is merged with any user supplied values
 
 ### Reverting / Destroying
 
