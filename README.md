@@ -42,7 +42,7 @@ When calling the `externalLinks` method you can pass in an object literal as the
 + **span_position**<span style="white-space: pre"></span> - (string), determines whether the favicon 'span' DOM element is, value can be either 'left' or 'right', *defaults to* `'right'`
 + **special_hosts**<span style="white-space: pre"></span> - (array), an array of arrays, each inner array must contains 2 elements, the first is a regexp, the second a hostname, links with hostnames that match a given regexp will have their favicons set to that of the hostname corresponding regexp, *the default value of* `[[/github\.com$/, 'github.com']]` is merged with any user supplied values
 
-A More Complicated Example:
+### A More Complicated Example
 
 ```javascript
 // wrap code in a lambda that is executed immediately (allows use of $ without the risk of global/library conflicts)
