@@ -1,7 +1,7 @@
 YEAR			= $(shell date +%Y)
 DATE 			= $(shell date +%I:%M%p)
 CHECK 			= \033[32m✔\033[39m
-HR 				= \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
+HR 				= \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#
 
 
 #
@@ -45,10 +45,10 @@ build_end:
 
 build_js:
 # remove anything from a previous build
-	@rm -rf ./.*\.min.js
+	@rm -rf ./jquery.external_links.min.js
 	@echo "Removing existing minified JS...              ${CHECK} Done"
 # gen minified versions of JS files
-	@for FILE in ./*.js; do uglifyjs -nc $$FILE > ./`basename "$$FILE" .js`.min.js; done
+	@uglifyjs -nc ./jquery.external_links.js > ./jquery.external_links.min.js
 	@echo "Compiling and minifying JS...                 ${CHECK} Done"
 
 #
