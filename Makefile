@@ -10,24 +10,18 @@ HR 				= \#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\#\
 build: build_start jslint build_js build_end
 
 #
-# RUN LINT AND UNIT TESTS
-# jshint & phantomjs are required
+# RUN JSHINT & QUNIT TESTS IN PHANTOMJS
 #
 jslint:
 	@jshint ./jquery.external_links.js --config ./.jshintrc
 	@echo "Running JSHint on JS...                       ${CHECK} Done"
 
 test: jslint
-	@node test/server.js &
-	@sleep 1
-	@$$( \
-		phantomjs test/phantom.js "http://localhost:3000/test/index.html"; \
-		TEST_EXIT_STATUS="$$?"; \
-		kill -9 `cat ./test/pid.txt`; \
-		rm test/pid.txt; \
-		exit $$TEST_EXIT_STATUS \
-	)
-	@echo "Running qUnit tests...                        ${CHECK} Done"
+	node js/tests/server.js &
+	phantomjs js/tests/phantom.js "http://localhost:3000/js/test/index.html"
+	kill -9 `cat js/tests/pid.txt`
+	rm js/tests/pid.txt
+	@echo "Running Phantom.js tests...                   ${CHECK} Done"
 
 #
 # VARIOUS BUILD STEPS
