@@ -1,281 +1,249 @@
-/* global module, test, equal, ok, jQuery */
+/* global module, test, equal, ok, expect */
+/* add cruft to spoof syntax highlighter in my editor :( */
+if (false) {
+    if (!module)        var module          = function() {};
+    if (!test)          var test            = function() {};
+    if (!equal)         var equal           = function() {};
+    if (!ok)            var ok              = function() {};
+    if (!expect)        var expect          = function() {};
+    if (!notEqual)      var notEqual        = function() {};
+    if (!strictEqual)   var strictEqual     = function() {};
+    if (!notStrictEqual)var notStrictEqual  = function() {};
+    if (!deepEqual)     var deepEqual       = function() {};
+    if (!notDeepEqual)  var notDeepEqual    = function() {};
+    if (!raises)        var raises          = function() {};
+}
+
+/* end of (syntax-highlighter) cruft */
+
+/**
+ * Todo, tests that need to be made:
+ *
+ *      - 'link-selector' usage
+ *      - 'special_hosts' usage
+ *      - 'span_position' usage (correct positioning of span elements)
+ *      - 'favicon_url' & 'url_seperator' usage
+ *      - 'special_hosts' usage
+ *      - original target attributes are reverted on `destroy`
+ *
+ */
+
 (function ($) {
     "use strict";
 
-    /* If there is no delegation support, forcibly reset the plugin between
-     * test runs
-     */
-    function resetPlugin() {
-        if (!$.fn.on && !$.fn.delegate && !$.fn.live) {
-            $.fn.example.boundClassNames = [];
-        }
-    }
+    // these need to match the default options in the plugin
+    var defOpts         = {
+        favicon         : true,
+        favicon_url     : 'http://favicon.yandex.net/favicon',
+        url_seperator   : '/',
+        link_class      : 'external-link',
+        // the following means only allow 'A' dom elements will be effected by this plugin (by default)
+        link_selector   : 'a',
+        span_class      : 'ext-favicon',
+        // left or right (determines where the span is inject relative to the link)
+        span_position   : 'right',
+        // array of regexps and alternative hostnames to use if a URLs host matches the corresponding regexp
+        special_hosts   : [
+            [/github\.com$/, 'github.com']
+        ]
+    };
 
-    module("Basic usage", {
-        setup: function () {
-            $('#basic1').example('Test');
-            $('#basicform').submit(function (e) {
-                e.preventDefault();
-            });
-        },
-        teardown: resetPlugin
-    });
-    test("should have an example set", function () {
-        equal($('#basic1').val(), "Test", "The example should read 'Test'.");
-        ok($('#basic1').hasClass('example'), "The class should be 'example'.");
-    });
-    test("should be cleared on focus", function () {
-        $('#basic1').focus();
+    // below are a series of object literals for plugin options [re-]used in various tests.
+    var noFaviconOpts   = {
+        favicon         : false
+    };
+    var customCssOpts   = {
+        link_class      : 'custom-link',
+        span_class      : 'custom-span'
+    };
 
-        equal($('#basic1').val(), "", "The example should be cleared.");
-        ok(!$('#basic1').hasClass('example'), "The class should no longer be 'example'.");
-    });
-    test("should reappear on blur if empty", function () {
-        $('#basic1').focus().blur();
+    // ------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------
 
-        equal($('#basic1').val(), "Test", "The example should read 'Test'.");
-        ok($('#basic1').hasClass('example'), "The class should be 'example'.");
-    });
-    test("should not be populated with an example on blur if user input is present", function () {
-        $('#basic1').focus();
-        $('#basic1').val("My own value");
-        $('#basic1').blur();
+    // unit-test-module options
+    var moduleOpts    = {
+        teardown: function() {}
+    };
 
-        equal($('#basic1').val(), "My own value", "The example should not be cleared.");
-        ok(!$('#basic1').hasClass('example'), "The class should not be 'example'.");
-    });
-    test("should not be populated with an example on focus if user input is present", function () {
-        $('#basic1').focus().val("My own value").blur().focus();
+    //module('Plugin is chainable', moduleOpts);
+    test('Plugin is chainable', function() {
+        expect(1);
 
-        equal($('#basic1').val(), "My own value", "The example should not be cleared.");
-        ok(!$('#basic1').hasClass('example'), "The class should not be 'example'.");
-    });
-    test("should be cleared on form submit", function () {
-        $('#basicform').submit();
+        var $links = $('#qunit-fixture a'),
+            $chain = $links.externalLinks();
 
-        equal($('#basic1').val(), "", "The example should be cleared.");
-    });
-    test("shouldn't clear user inputs on form submit", function () {
-        $('#basic2').focus().val("User input");
-        $('#basicform').triggerHandler('submit');
-
-        equal($('#basic2').val(), "User input", "The user input should be intact.");
+        deepEqual($links, $chain, 'The plugin should be chainable.');
     });
 
-    module("Using custom classes", {
-        setup: function () {
-            $('#custom1').example("Test", {className: "notExample"});
-        },
-        teardown: resetPlugin
-    });
-    test("should have an example set", function () {
-        equal($('#custom1').val(), "Test", "The example should be set.");
-        ok($('#custom1').hasClass('notExample'), "The class should be the specified one.");
-        ok(!$('#custom1').hasClass('example'), "The class should not be 'example'.");
-    });
-    test("should be cleared on focus", function () {
-        $('#custom1').focus();
+    // -----------------------
+    module('One link with defaults', moduleOpts);
+    //
+    test('Init on first link only', function() {
+        expect(8);
 
-        equal($('#custom1').val(), "", "The example should be cleared.");
-        ok(!$('#custom1').hasClass('notExample'), "The class should not be the specified one.");
-    });
-    test("should be reappear on blur", function () {
-        $('#custom1').focus().blur();
+        var $fixture = $('#qunit-fixture'),
+            $link    = $fixture.find('a').eq(0),
+            $span    = null,
+            host     = null;
 
-        equal($('#custom1').val(), "Test", "The example should reappear.");
-        ok($('#custom1').hasClass('notExample'), "The class should be the specified one.");
-    });
+        equal($link.length, 1, 'A single element should be selected');
 
-    module("Multiple forms", {
-        setup: function () {
-            $('#multipleform1, #multipleform2').submit(function (e) {
-                e.preventDefault();
-            });
-            $('#mf1').example('Test');
-            $('#mf2').example('Test');
-        },
-        teardown: resetPlugin
-    });
-    test("should only clear examples in that form", function () {
-        $('#multipleform1').submit();
+        $link.externalLinks();
+        $span = $link.find('span');
 
-        equal($('#mf1').val(), "", "The example should be cleared.");
-        equal($('#mf2').val(), "Test", "An example in another form should not be cleared.");
-    });
-
-    module("Simple callback", {
-        setup: function () {
-            $('#callback1').example(function () { return "Callback Test"; });
-        },
-        teardown: resetPlugin
-    });
-    test("should have an example set", function () {
-        equal($('#callback1').val(), "Callback Test", "The example should read 'Callback Test'.");
-        ok($('#callback1').hasClass('example'), "The class should be 'example'.");
-    });
-    test("should be cleared on focus", function () {
-        $('#callback1').focus();
-
-        equal($('#callback1').val(), "", "The example should be cleared.");
-        ok(!$('#callback1').hasClass('example'), "The class should no longer be 'example'.");
-    });
-    test("should reappear on blur if empty", function () {
-        $('#callback1').focus().blur();
-
-        equal($('#callback1').val(), "Callback Test", "The example should read 'Callback Test'.");
-        ok($('#callback1').hasClass('example'), "The class should be 'example'.");
-    });
-
-    module("More complicated callback", {
-        setup: function () {
-            $('#callback2').example(function () {
-                return $(this).attr('title');
-            });
-        },
-        teardown: resetPlugin
-    });
-    test("should have an example set", function () {
-        equal($('#callback2').val(), "Starting", "The example should read 'Starting'.");
-        ok($('#callback2').hasClass('example'), "The class should be 'example'.");
-    });
-    test("should be cleared on focus", function () {
-        $('#callback2').focus();
-
-        equal($('#callback2').val(), "", "The example should be cleared.");
-        ok(!$('#callback2').hasClass('example'), "The class should no longer be 'example'.");
-    });
-    test("should reappear on blur if empty", function () {
-        $('#callback2').focus().blur();
-
-        equal($('#callback2').val(), "Starting", "The example should read 'Starting'.");
-        ok($('#callback2').hasClass('example'), "The class should be 'example'.");
-    });
-    test("should run the callback every time instead of caching it", function () {
-        $('#callback2').attr('title', 'Another');
-        $('#callback2').focus().blur();
-
-        equal($('#callback2').val(), "Another", "The example should read 'Another'.");
-        ok($('#callback2').hasClass('example'), "The class should be 'example'.");
-    });
-
-    module("Metadata plugin", {
-        setup: function () {
-            $('#m1').example();
-        },
-        teardown: resetPlugin
-    });
-    test("should have an example set", function () {
-        equal($('#m1').val(), "Something", "The example should read 'Something'.");
-        ok($('#m1').hasClass('m1'), "The class should be 'm1'.");
-    });
-    test("should be cleared on focus", function () {
-        $('#m1').focus();
-
-        equal($('#m1').val(), "", "The example should be cleared.");
-        ok(!$('#m1').hasClass('m1'), "The class should no longer be 'm1'.");
-    });
-    test("should reappear on blur if empty", function () {
-        $('#m1').focus().blur();
-
-        equal($('#m1').val(), "Something", "The example should read 'Something'.");
-        ok($('#m1').hasClass('m1'), "The class should be 'm1'.");
-    });
-    test("should be overridden by arguments", function () {
-        $('#m2').example('Precedence', {className: 'o1'});
-
-        equal($('#m2').val(), "Precedence", "The example in the arguments should take precedence");
-        ok($('#m2').hasClass('o1'), "The class should be 'o1'.");
-    });
-
-    module("On page load", {
-        teardown: resetPlugin
-    });
-    test("should not set an example if a value is already set", function () {
-        $('#load1').example("Test");
-
-        equal($('#load1').val(), "Already filled in", "The example should not be set.");
-        ok(!$('#load1').hasClass('example'), "The class should not be 'example'.");
-    });
-    test("should not clear a field with a value even when using a callback", function () {
-        $('#load2').example(function () {
-            return "Nope";
+        $link.each(function(n) {
+            host = this.hostname;
         });
 
-        equal($('#load2').val(), "Default", "The value should be the default.");
-        ok(!$('#load2').hasClass('example'), "The class should not be 'example'.");
+        ok($link.hasClass(defOpts.link_class), 'The (plugin default) \'' + defOpts.link_class + '\' CSS class should be set on the first link.');
+        equal($span.length, 1, 'The first link should have a span child element.');
+        ok($span.hasClass(defOpts.span_class), 'The (plugin default) \'' + defOpts.span_class + '\' CSS class should be set on the span child element.');
+        equal($span.css('background-image'), 'url("' + defOpts.favicon_url + defOpts.url_seperator + host + '")', 'The span child element should have a correctly set background-image CSS property');
+
+        equal($fixture.find('a.' + defOpts.link_class).length, 1, 'There should only be one link with a (plugin default) \'' + defOpts.link_class + '\' CSS class');
+        equal($fixture.find('a span').length, 1, 'There should only be one link with a contained span element');
+        notEqual($link.attr('class'), defOpts.link_class, 'The link should have the (plugin default) \'' + defOpts.link_class + '\' CSS class set in addition to CSS classes defined prior to calling the plugin');
+    });
+    //
+    test('Destroy on first link only', function() {
+        expect(5);
+
+        var $fixture = $('#qunit-fixture'),
+            $link    = $fixture.find('a').eq(0),
+            css      = $link.attr('class');
+
+        $link.externalLinks();
+
+        equal($fixture.find('a.' + defOpts.link_class).length, 1, 'There should only be one link with a (plugin default) \'' + defOpts.link_class + '\' CSS class before `destroy`');
+        equal($fixture.find('a span').length, 1, 'There should only be one link with a contained span element before `destroy`');
+
+        $link.externalLinks('destroy');
+
+        equal($fixture.find('a.' + defOpts.link_class).length, 0, 'There should be no links with a (plugin default) \'' + defOpts.link_class + '\' CSS class after `destroy`');
+        equal($fixture.find('a span').length, 0, 'There should be no links with a contained span element after `destroy`');
+        equal($link.attr('class'), css, 'The link\'s class attribute should be restored to the original value after `destroy`');
     });
 
-    module("Changing values by Javascript", {
-        setup: function () {
-            $('#f1').example('Example');
-        },
-        teardown: resetPlugin
-    });
-    test("should set example", function () {
-        equal($('#f1').val(), "Example", "The example should read 'Example'.");
-        ok($('#f1').hasClass('example'), "The example class should be set.");
-    });
+    // -----------------------
+    module('One link with defaults, but no favicon', moduleOpts);
+    //
+    test('Init on first link only', function() {
+        expect(2);
 
-    test("should remove example class when changed", function () {
-        $('#f1').val("New value");
-        $('#f1').change();
+        var $fixture = $('#qunit-fixture'),
+            $link    = $fixture.find('a').eq(0),
+            $span    = null,
+            host     = null;
 
-        equal($('#f1').val(), "New value", "Value should be changed to 'New value'.");
-        ok(!$('#f1').hasClass('example'), "The example class should no longer be set.");
+        $link.externalLinks(noFaviconOpts);
+        $span = $link.find('span');
 
-        /* Clear the field between test runs. */
-        $('#f1').val('');
-    });
-
-    module("Clearing values when loaded from cache", {
-        teardown: resetPlugin
-    });
-    test("value should be set to default value", function () {
-
-        /* Fake loading from cache by setting the example to be different to
-         * the recorded defaultValue.
-         */
-        $('#c1').val('Cached example').example('Cached example');
-        equal($('#c1').val(), "Filled in", "Value should have been reset to 'Filled in'.");
-    });
-    test("value should be cleared and set to the example if without default", function () {
-        $('#c2').val('Cached example').example('Cached example');
-        equal($('#c2').val(), 'Cached example', "Value should have been emptied.");
-        ok($('#c2').hasClass('example'), 'The example class should be set.');
-    });
-    test("value is not touched if it doesn't match the example", function () {
-        $('#c3').val('Some user input').example('Test');
-        equal($('#c3').val(), 'Some user input', 'Value should not have been modified.');
-        ok(!$('#c3').hasClass('example'), 'The example class should not be set.');
-    });
-    test('value is always cleared if the example is a callback', function () {
-        $('#c4').val('Some user input').example(function () {
-            return 'Test';
+        $link.each(function(n) {
+            host = this.hostname;
         });
-        equal($('#c4').val(), 'Test', 'The cached value is overridden.');
-        ok($('#c4').hasClass('example'), 'The example class should be set.');
+
+        equal($span.length, 0, 'The first link should NOT have a span child element.');
+        equal($fixture.find('a span').length, 0, 'There should be NO link with a contained span element');
     });
-    test('value is not touched if it is the default', function () {
-        $('#c5').val('Some default').example('Test');
-        equal($('#c5').val(), 'Some default', 'Value should not have been modified.');
-        ok(!$('#c5').hasClass('example'), 'The example class should not be set.');
+    //
+    test('Destroy on first link only', function() {
+        expect(4);
+
+        var $fixture = $('#qunit-fixture'),
+            $link    = $fixture.find('a').eq(0),
+            css      = $link.attr('class');
+
+        $link.externalLinks(noFaviconOpts);
+
+        equal($fixture.find('a.' + defOpts.link_class).length, 1, 'There should only be one link with a (plugin default) \'' + defOpts.link_class + '\' CSS class before `destroy`');
+        equal($fixture.find('a span').length, 0, 'There should be NO link with a contained span element before `destroy`');
+
+        $link.externalLinks('destroy');
+
+        equal($fixture.find('a.' + defOpts.link_class).length, 0, 'There should be no links with a (plugin default) \'' + defOpts.link_class + '\' CSS class after `destroy`');
+        equal($link.attr('class'), css, 'The link\'s class attribute should be restored to the original value after `destroy`');
     });
 
-    module('Custom events', {
-        teardown: resetPlugin
+    // -----------------------
+    module('One link with custom css classes', moduleOpts);
+    //
+    test('Init on first link only', function() {
+        expect(6);
+
+        var $fixture = $('#qunit-fixture'),
+            $link    = $fixture.find('a').eq(0),
+            $span    = null,
+            host     = null;
+
+        $link.externalLinks(customCssOpts);
+        $span = $link.find('span');
+
+        ok($link.hasClass(customCssOpts.link_class), 'The \'' + customCssOpts.link_class + '\' CSS class should be set on the first link.');
+        ok($span.hasClass(customCssOpts.span_class), 'The \'' + customCssOpts.span_class + '\' CSS class should be set on the span child element.');
+
+        equal($fixture.find('a.' + customCssOpts.link_class).length, 1, 'There should only be one link with a \'' + customCssOpts.link_class + '\' CSS class');
+        equal($fixture.find('a.' + defOpts.link_class).length, 0, 'There should only be NO link with a (plugin default) \'' + customCssOpts.link_class + '\' CSS class');
+        equal($fixture.find('a span').length, 1, 'There should only be one link with a contained span element');
+        notEqual($link.attr('class'), customCssOpts.link_class, 'The link should have the \'' + customCssOpts.link_class + '\' CSS class set in addition to CSS classes defined prior to calling the plugin');
+
     });
-    test('a specific form is cleared when calling example:resetForm on it', function () {
-        $('#ce1, #ce2').example('Testing');
-        $('#custom').trigger('example:resetForm');
-        equal($('#ce1').val(), '', 'The value should have been cleared.');
-        ok(!$('#ce1').hasClass('example'), 'The example class should not be set.');
-        equal($('#ce2').val(), 'Testing', 'The value should not have been cleared.');
-        ok($('#ce2').hasClass('example'), 'The example class should be set.');
+    //
+    test('Destroy on first link only', function() {
+        expect(5);
+
+        var $fixture = $('#qunit-fixture'),
+            $link    = $fixture.find('a').eq(0),
+            css      = $link.attr('class');
+
+        $link.externalLinks(customCssOpts);
+
+        equal($fixture.find('a.' + customCssOpts.link_class).length, 1, 'There should only be one link with a \'' + customCssOpts.link_class + '\' CSS class, before `destroy`');
+        equal($fixture.find('a span').length, 1, 'There should only be one link with a contained span element, before `destroy`');
+
+        $link.externalLinks('destroy');
+
+        equal($fixture.find('a.' + customCssOpts.link_class).length, 0, 'There should be no links with a (plugin default) \'' + customCssOpts.link_class + '\' CSS class, after `destroy`');
+        equal($fixture.find('a span').length, 0, 'There should be no links with a contained span element, after `destroy`');
+        equal($link.attr('class'), css, 'The link\'s class attribute should be restored to the original value, after `destroy`');
     });
-    test('triggering example:resetForm on a field will bubble to the form', function () {
-        $('#ce1').example('Testing');
-        $('#ce1').trigger('example:resetForm');
-        equal($('#ce1').val(), '', 'The value should have been cleared.');
-        ok(!$('#ce1').hasClass('example'), 'The example class should not be set.');
+
+    // -----------------------
+    module('All contained links', moduleOpts)
+    //
+    test('Init links', function() {
+        var $fixture = $('#qunit-fixture'),
+            $links   = $fixture.find('a'),
+            $spans   = null;
+
+        $links.externalLinks();
+        $spans = $links.find('span');
+
+        $links.each(function(n) {
+            var host = this.hostname;
+        });
+
+        equal($fixture.find('a.' + defOpts.link_class).length, $links.length, 'All links should have the \'' + defOpts.link_class + '\' CSS class');
+        equal($fixture.find('a span.' + defOpts.span_class).length, $links.length, 'All links should have a contained span element with \'' + defOpts.link_class + '\' CSS class');
+    });
+    //
+    test('Destroy links', function() {
+        var $fixture = $('#qunit-fixture'),
+            $links   = $fixture.find('a'),
+            $spans   = null;
+
+        $links.externalLinks();
+        $spans = $links.find('span');
+
+        $links.each(function(n) {
+            var host = this.hostname;
+        });
+
+        equal($fixture.find('a.' + defOpts.link_class).length, $links.length, 'All links should have the \'' + defOpts.link_class + '\' CSS class, before `destroy`');
+        equal($fixture.find('a span.' + defOpts.span_class).length, $links.length, 'All links should have a contained span element with \'' + customCssOpts.link_class + '\' CSS class, before `destroy`');
+
+        $links.externalLinks('destroy');
+
+        equal($fixture.find('a.' + defOpts.link_class).length, 0, 'NO links should have the \'' + defOpts.link_class + '\' CSS class, after `destroy`');
+        equal($fixture.find('a span.' + defOpts.span_class).length, 0, 'NO links should have a contained span element with \'' + customCssOpts.link_class + '\' CSS class, after `destroy`');
     });
 }(jQuery));
